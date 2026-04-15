@@ -2,9 +2,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
-import Accommodations from './pages/Accommodations';
-import Alumni from './pages/Alumni';
-import MyPage from './pages/MyPage';
+import MessagesPage from './pages/MessagesPage';
+import MyDetailsPage from './pages/MyDetailsPage';
+import NotificationsPage from './pages/NotificationsPage';
+import SettingsPage from './pages/SettingsPage';
 
 
 function App() {
@@ -14,10 +15,11 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/home" element={<HomePage />} />
-        <Route path="/accommodations" element={<Accommodations />} />
-        <Route path="/mypage" element={<MyPage />} />
-        <Route path="/alumni" element={<Alumni />} />
-        
+        <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/mydetails" element={<MyDetailsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+         <Route path="/settings" element={<SettingsPage />} />
+      
       </Routes>
     </BrowserRouter>
   );
