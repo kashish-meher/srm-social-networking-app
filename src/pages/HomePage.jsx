@@ -6,8 +6,8 @@ const TABS = ['All Posts', 'Rent', 'Resources', 'Events', 'Products'];
 
 const NAV = [
   { icon: '🏠', label: 'Home', path: '/home' },
-  { icon: '📅', label: 'Events', path: '/events' },
-  { icon: '📚', label: 'Library', path: '/library' },
+  { icon: '📅', label: 'My Details', path: '/mydetails' },
+  { icon: '📚', label: 'Messages', path: '/messages' },
   { icon: '⚙️', label: 'Settings', path: '/settings' },
 ];
 
@@ -29,7 +29,7 @@ export default function HomePage() {
         <div className="hp-logo">SRM Connect</div>
         <div className="hp-search">
           <span>🔍</span>
-          <input placeholder="Search communities, notes, or events..." />
+          <input placeholder="Search ..." />
         </div>
         <div className="hp-nav-right">
           <button className="hp-icon-btn">🔔</button>
