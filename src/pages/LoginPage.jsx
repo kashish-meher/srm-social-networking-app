@@ -1,125 +1,115 @@
 import React, { useState } from 'react';
-import '../styles/LoginPage.css';
 import { useNavigate } from 'react-router-dom';
+import '../styles/LoginPage.css';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [emailError, setEmailError] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [remember, setRemember] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const validateEmail = (val) => {
-    if (val && !val.match(/@srmist\.edu\.in$|@srmuniversity\.ac\.in$/)) {
-      setEmailError('Only @srmist.edu.in or @srmuniversity.ac.in addresses allowed.');
-    } else {
-      setEmailError('');
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError('Please fill in all fields.');
+      return;
     }
+    if (!email.match(/@srmist\.edu\.in$|@srmuniversity\.ac\.in$/)) {
+      setError('Only @srmist.edu.in or @srmuniversity.ac.in emails allowed.');
+      return;
+    }
+    setError('');
+    navigate('/home');
   };
 
-  const handleSubmit = (e) => {
-  e.preventDefault();
-  if (!emailError && email && password) {
-    navigate('/home');
-  }
-};
-
   return (
-    <div className="login-root">
-      {/* Background overlay */}
-      <div className="login-bg" />
-
-      {/* Left Side */}
-      <div className="login-left">
-        <div className="brand">
-          <h1 className="brand-title">SRM Connect</h1>
-          <p className="brand-sub">
-            Step into the digital heartbeat of our university. Research, network,
-            and thrive in an ecosystem built for the{' '}
-            <span className="brand-highlight">Modern Scholar.</span>
-          </p>
-        </div>
-
-        <div className="feature-cards">
-          <div className="feature-card">
-            <div className="feature-icon">🎓</div>
-            <h3>Academic Hub</h3>
-            <p>Connect with professors and peers in focused research communities.</p>
+    <div className="lp-root">
+      <div className="lp-card">
+        {/* LEFT PANEL */}
+        <div className="lp-left">
+          <div className="lp-left-top">
+            <div className="lp-brand">
+              <div className="lp-brand-icon">✳</div>
+              <span>SRM Connect</span>
+            </div>
+            <h1 className="lp-headline">Bridge your academic journey with the community.</h1>
+            <p className="lp-tagline">Access courses, events, and campus discussions in one unified student hub.</p>
           </div>
-          <div className="feature-card">
-            <div className="feature-icon">👥</div>
-            <h3>Alumni Network</h3>
-            <p>Unlock career opportunities through our global alumni database.</p>
+          <div className="lp-testimonial">
+            <p className="lp-quote">"The easiest way to stay updated with campus life. Everything I need is right here."</p>
+            <div className="lp-testimonial-author">
+              <div className="lp-author-avatar">A</div>
+              <div>
+                <div className="lp-author-name">Ananya Sharma</div>
+                <div className="lp-author-role">Computer Science Major</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="scholars-badge">
-          <span className="badge-dot" />
-          2,401 SCHOLARS ONLINE
-        </div>
-      </div>
+        {/* RIGHT PANEL */}
+        <div className="lp-right">
+          <h2 className="lp-title">Welcome Back</h2>
+          <p className="lp-sub">Please enter your credentials to access your portal</p>
 
-      {/* Right Side — Login Card */}
-      <div className="login-right">
-        <div className="login-card">
-          <h2 className="card-title">Welcome Back</h2>
-          <p className="card-sub">Please enter your institutional details.</p>
+          <form className="lp-form" onSubmit={handleSubmit}>
+            {error && <div className="lp-error">{error}</div>}
 
-          <form onSubmit={handleSubmit} className="login-form">
-            <div className="field-group">
-              <label>Institutional Email</label>
-              <div className="input-wrap">
-                <span className="input-icon">@</span>
+            <div className="lp-field">
+              <label>University Email</label>
+              <div className="lp-input-wrap">
+                <span className="lp-input-icon">✉</span>
                 <input
                   type="email"
-                  placeholder="yourname@srmist.edu.in"
+                  placeholder="reg_number@srmist.edu.in"
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); validateEmail(e.target.value); }}
+                  onChange={e => setEmail(e.target.value)}
                 />
               </div>
-              {emailError
-                ? <p className="field-error">{emailError}</p>
-                : <p className="field-hint">Only @srmist.edu.in or @srmuniversity.ac.in addresses allowed.</p>
-              }
             </div>
 
-            <div className="field-group">
-              <div className="label-row">
+            <div className="lp-field">
+              <div className="lp-field-header">
                 <label>Password</label>
-                <a href="#forgot" className="forgot-link">Forgot Password?</a>
+                <button type="button" className="lp-forgot">Forgot Password?</button>
               </div>
-              <div className="input-wrap">
-                <span className="input-icon">🔒</span>
+              <div className="lp-input-wrap">
+                <span className="lp-input-icon">🔒</span>
                 <input
-                  type="password"
+                  type={showPass ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                 />
+                <button type="button" className="lp-eye" onClick={() => setShowPass(!showPass)}>
+                  {showPass ? '🙈' : '👁'}
+                </button>
               </div>
             </div>
 
-            <button type="submit" className="btn-signin">Sign In</button>
+            <label className="lp-remember">
+              <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />
+              Keep me logged in for 30 days
+            </label>
+
+            <button type="submit" className="lp-btn-signin">
+              Sign In to SRM Connect →
+            </button>
           </form>
 
-          <div className="divider"><span>OR CONTINUE WITH</span></div>
+          <div className="lp-divider"><span>OR CONTINUE WITH</span></div>
 
-          <button className="btn-gsuite">
-            <span className="gsuite-icon">G</span>
-            University G-Suite
+          <button className="lp-btn-google">
+            <span className="lp-google-icon">G</span>
+            Google Workspace
           </button>
 
-          <p className="signup-text">
-            New to the connect?{' '}
-            <a href="#register" className="signup-link">Create an Account</a>
+          <p className="lp-signup-text">
+            Don't have an account?{' '}
+            <button className="lp-link-btn" onClick={() => navigate('/register')}>Register Now</button>
           </p>
-
-          <div className="card-footer">
-            <a href="#terms">Terms of Service</a>
-            <span>·</span>
-            <a href="#privacy">Privacy Policy</a>
-            <span>·</span>
-            <a href="#access">Institutional Access</a>
-          </div>
         </div>
       </div>
     </div>

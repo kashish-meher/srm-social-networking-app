@@ -2,66 +2,25 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/HomePage.css';
 
-const TABS = ['All', 'To-let', 'Resources', 'Events', 'General Discussions'];
+const TABS = ['All Posts', 'Rent', 'Resources', 'Events', 'Products'];
 
-const POSTS = [
-  {
-    id: 1,
-    name: 'Priya Sharma',
-    role: 'Computer Science Alumni • 2h ago',
-    avatar: 'PS',
-    avatarColor: '#e07b54',
-    tag: 'RESOURCES',
-    tagColor: '#e07b54',
-    content: 'Just shared my complete notes for the upcoming "Advanced Distributed Systems" finals. Hope this helps the juniors! Feel free to reach out if you have questions about the Paxos algorithm section. 📚',
-    image: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=600&q=80',
-    likes: 124,
-    comments: 16,
-    shares: 5,
-  },
-  {
-    id: 2,
-    name: 'Rahul Verma',
-    role: 'Mechanical Eng • 3h ago',
-    avatar: 'RV',
-    avatarColor: '#5b8dee',
-    tag: 'TO LET',
-    tagColor: '#3b82f6',
-    content: 'Room Available in Abode Heights (Single Occupancy)\n\nLooking for a flatmate starting next month. The apartment is fully furnished, 5 mins walk from the main gate. DM for more pictures and details.',
-    image: null,
-    likes: 42,
-    comments: 9,
-    shares: 3,
-  },
+const NAV = [
+  { icon: '🏠', label: 'Home', path: '/home' },
+  { icon: '📅', label: 'Events', path: '/events' },
+  { icon: '📚', label: 'Library', path: '/library' },
+  { icon: '⚙️', label: 'Settings', path: '/settings' },
 ];
 
 const TRENDING = [
-  { category: 'TRENDING IN ENGINEERING', tag: '#SRMHackathon2024', meta: '2.4k students discussing' },
-  { category: 'CAMPUS LIFE', tag: '#MilanFestival', meta: '1.6k posts today' },
-  { category: 'PLACEMENTS', tag: '#GoogleHiring', meta: '856 discussions' },
-];
-
-const ALUMNI = [
-  { name: 'Ankit Malhotra', role: 'SDE at Microsoft • Class of \'19', initials: 'AM', color: '#5b8dee' },
-  { name: 'Sarah Thompson', role: 'Product Designer at Adobe', initials: 'ST', color: '#e07b54' },
-];
-
-const NAV_ITEMS = [
-  { icon: '🏠', label: 'Home', path: '/home' },
-  { icon: '👤', label: 'My Page', path: '/profile' },
-  { icon: '🎓', label: 'Alumni', path: '/alumni' },
-  { icon: '🏠', label: 'Accommodations', path: '/accommodations' },
-  { icon: '🔭', label: 'Explore', path: '/explore' },
-  { icon: '🔔', label: 'Notifications', path: '/notifications' },
+  { cat: '#PLACEMENT_DIARIES', title: 'FAANG Interview Experience' },
+  { cat: '#CAMPUS_LIFE', title: 'New Canteen Review' },
+  { cat: '#EXAM_PREP', title: 'MA101 Important Questions' },
 ];
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState('All');
-  const [postText, setPostText] = useState('');
-  const [likedPosts, setLikedPosts] = useState({});
+  const [activeTab, setActiveTab] = useState('All Posts');
+  const [liked, setLiked] = useState({});
   const navigate = useNavigate();
-
-  const toggleLike = (id) => setLikedPosts(p => ({ ...p, [id]: !p[id] }));
 
   return (
     <div className="hp-root">
@@ -69,147 +28,135 @@ export default function HomePage() {
       <header className="hp-topnav">
         <div className="hp-logo">SRM Connect</div>
         <div className="hp-search">
-          <span className="hp-search-icon">🔍</span>
-          <input placeholder="Search for peers, alumni or topics..." />
+          <span>🔍</span>
+          <input placeholder="Search communities, notes, or events..." />
         </div>
-        <div className="hp-nav-actions">
+        <div className="hp-nav-right">
           <button className="hp-icon-btn">🔔</button>
-          <div className="hp-avatar-circle" style={{ background: '#5b8dee' }}>U</div>
+          <button className="hp-icon-btn">💬</button>
+          <div className="hp-avatar">U</div>
         </div>
       </header>
 
       <div className="hp-body">
         {/* LEFT SIDEBAR */}
         <aside className="hp-sidebar">
-          <div className="hp-brand-card">
-            <div className="hp-brand-avatar">SC</div>
-            <div>
-              <div className="hp-brand-name">SRM Connect</div>
-              <div className="hp-brand-sub">The Modern Scholar</div>
-            </div>
+          <div className="hp-brand-block">
+            <div className="hp-brand-title">SRM Connect</div>
+            <div className="hp-brand-sub">Student Portal</div>
           </div>
           <nav className="hp-nav">
-            {NAV_ITEMS.map(item => (
+            {NAV.map(item => (
               <button
                 key={item.label}
-                className={`hp-nav-item ${item.path === '/home' ? 'active' : ''}`}
+                className={`hp-nav-item${item.path === '/home' ? ' active' : ''}`}
                 onClick={() => navigate(item.path)}
               >
-                <span className="hp-nav-icon">{item.icon}</span>
-                {item.label}
+                <span>{item.icon}</span> {item.label}
               </button>
             ))}
           </nav>
-          <button className="hp-create-post-btn" onClick={() => document.getElementById('post-input').focus()}>
-            + Create Post
-          </button>
         </aside>
 
         {/* MAIN FEED */}
-        <main className="hp-feed">
+        <main className="hp-main">
           {/* TABS */}
           <div className="hp-tabs">
-            {TABS.map(tab => (
+            {TABS.map(t => (
               <button
-                key={tab}
-                className={`hp-tab ${activeTab === tab ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </button>
+                key={t}
+                className={`hp-tab${activeTab === t ? ' active' : ''}`}
+                onClick={() => setActiveTab(t)}
+              >{t}</button>
             ))}
           </div>
 
-          {/* POST COMPOSER */}
-          <div className="hp-composer">
-            <div className="hp-composer-avatar">U</div>
-            <div className="hp-composer-box">
-              <input
-                id="post-input"
-                placeholder="Share your academic journey or ask a question..."
-                value={postText}
-                onChange={e => setPostText(e.target.value)}
+          {/* GRID */}
+          <div className="hp-grid">
+            {/* BIG POST — Resources */}
+            <div className="hp-post-big">
+              <div className="hp-tag tag-resources">RESOURCES</div>
+              <img
+                src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80"
+                alt="study" className="hp-big-img"
               />
-              <div className="hp-composer-actions">
-                <div className="hp-composer-tools">
-                  <button title="Image">🖼️</button>
-                  <button title="Attach">📎</button>
-                  <button title="Calendar">📅</button>
+              <div className="hp-post-big-body">
+                <div className="hp-author-row">
+                  <div className="hp-author-avatar" style={{ background: '#5b8dee' }}>A</div>
+                  <div>
+                    <div className="hp-author-name">Alex Rivera</div>
+                    <div className="hp-author-meta">2 hours ago • Computer Science</div>
+                  </div>
                 </div>
-                <button className="hp-post-btn">Post</button>
+                <h2 className="hp-post-title">Ultimate Data Structures Study Guide for Mid-Terms</h2>
+                <p className="hp-post-body">I've compiled all my handwritten notes and practice problems from the last 3 years. Includes Big O cheatsheet and common algorithms explained simply.</p>
+                <div className="hp-post-footer">
+                  <button className={`hp-like-btn${liked[1] ? ' liked' : ''}`} onClick={() => setLiked(l => ({ ...l, 1: !l[1] }))}>
+                    ♡ {liked[1] ? 125 : 124}
+                  </button>
+                  <button className="hp-comment-btn">💬 18</button>
+                  <button className="hp-dl-btn">Download PDF</button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* POSTS */}
-          {POSTS.map(post => (
-            <article key={post.id} className="hp-post-card">
-              <div className="hp-post-header">
-                <div className="hp-post-avatar" style={{ background: post.avatarColor }}>
-                  {post.avatar}
+            {/* SMALL CARDS COLUMN */}
+            <div className="hp-small-col">
+              {/* RENT CARD */}
+              <div className="hp-rent-card">
+                <div className="hp-rent-header">
+                  <span className="hp-tag tag-rent">RENT</span>
+                  <span className="hp-rent-price">$450<span>/mo</span></span>
                 </div>
-                <div className="hp-post-meta">
-                  <div className="hp-post-name">{post.name}</div>
-                  <div className="hp-post-role">{post.role}</div>
+                <div className="hp-rent-title">Room available in Green Park</div>
+                <p className="hp-rent-body">Looking for a tidy roommate to share a 2BHK. 5 mins walk from Campus Gate 3. Fully furnished with AC.</p>
+                <div className="hp-rent-location">📍 Potheri, Chennai</div>
+                <button className="hp-contact-btn">Contact Owner</button>
+              </div>
+
+              {/* PRODUCT CARD */}
+              <div className="hp-product-card">
+                <img src="https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=300&q=80" alt="book" className="hp-product-img" />
+                <div className="hp-product-info">
+                  <span className="hp-tag tag-products">PRODUCTS</span>
+                  <div className="hp-product-title">Engineering Physics Vol 1 & 2</div>
+                  <div className="hp-product-row">
+                    <span className="hp-product-by">By Sarah J.</span>
+                    <button className="hp-cart-btn">🛒</button>
+                  </div>
+                  <div className="hp-product-price">$25</div>
                 </div>
-                <span className="hp-post-tag" style={{ background: post.tagColor + '22', color: post.tagColor }}>
-                  {post.tag}
-                </span>
               </div>
-              <div className="hp-post-content">
-                {post.content.split('\n').map((line, i) => (
-                  <p key={i}>{line}</p>
-                ))}
-              </div>
-              {post.image && (
-                <div className="hp-post-image">
-                  <img src={post.image} alt="post visual" />
+
+              {/* EVENT CARD */}
+              <div className="hp-event-card">
+                <div className="hp-tag tag-events">EVENTS</div>
+                <div className="hp-event-title">HackSRM 2024</div>
+                <p className="hp-event-body">Join the biggest 36-hour hackathon on campus. Prizes worth $5000+ up for grabs!</p>
+                <div className="hp-event-meta">
+                  <span>📅 Oct 12-14</span>
+                  <span>👥 450 Registered</span>
                 </div>
-              )}
-              <div className="hp-post-footer">
-                <button
-                  className={`hp-action-btn ${likedPosts[post.id] ? 'liked' : ''}`}
-                  onClick={() => toggleLike(post.id)}
-                >
-                  ♡ {likedPosts[post.id] ? post.likes + 1 : post.likes}
-                </button>
-                <button className="hp-action-btn">💬 {post.comments}</button>
-                <button className="hp-action-btn">↗ {post.shares}</button>
-                <button className="hp-action-btn hp-bookmark">🔖</button>
+                <button className="hp-register-btn">Register Now</button>
               </div>
-            </article>
-          ))}
+            </div>
+
+            {/* TRENDING */}
+            <div className="hp-trending-widget">
+              <div className="hp-widget-title">↗ Trending Topics</div>
+              {TRENDING.map((t, i) => (
+                <div key={i} className="hp-trending-item">
+                  <div className="hp-trending-cat">{t.cat}</div>
+                  <div className="hp-trending-title">{t.title}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </main>
-
-        {/* RIGHT SIDEBAR */}
-        <aside className="hp-right-sidebar">
-          <div className="hp-widget">
-            <h3 className="hp-widget-title">Trending Topics</h3>
-            {TRENDING.map((t, i) => (
-              <div key={i} className="hp-trending-item">
-                <div className="hp-trending-category">{t.category}</div>
-                <div className="hp-trending-tag">{t.tag}</div>
-                <div className="hp-trending-meta">{t.meta}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="hp-widget">
-            <h3 className="hp-widget-title">Suggested Alumni</h3>
-            {ALUMNI.map((a, i) => (
-              <div key={i} className="hp-alumni-item">
-                <div className="hp-alumni-avatar" style={{ background: a.color }}>{a.initials}</div>
-                <div className="hp-alumni-info">
-                  <div className="hp-alumni-name">{a.name}</div>
-                  <div className="hp-alumni-role">{a.role}</div>
-                </div>
-                <button className="hp-follow-btn">+</button>
-              </div>
-            ))}
-            <button className="hp-view-all">View All Scholars</button>
-          </div>
-        </aside>
       </div>
+
+      {/* FAB */}
+      <button className="hp-fab">+</button>
     </div>
   );
 }
