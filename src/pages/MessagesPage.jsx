@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Search, Video, Phone, MoreVertical, Smile, Paperclip, Image, Send } from "lucide-react";
 
 const conversations = [
@@ -47,6 +48,8 @@ const messages = [
 ];
 
 export default function MessagesPage() {
+  const location = useLocation();
+  const selectedUser = location.state?.user;
   const [activeConv, setActiveConv] = useState(1);
   const [messageText, setMessageText] = useState("");
   const active = conversations.find((c) => c.id === activeConv);

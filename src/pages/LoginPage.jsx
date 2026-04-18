@@ -36,11 +36,9 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (res.ok) {
-        // ✅ store token
+      if (res.ok) {        
         localStorage.setItem("token", data.token);
-
-        // optional: store user info
+        console.log("LOGIN RESPONSE:", data.user);
         localStorage.setItem("user", JSON.stringify(data.user));
 
         navigate('/home');

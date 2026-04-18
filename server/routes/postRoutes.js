@@ -34,7 +34,7 @@ router.post("/", upload.array("images", 4), async (req, res) => {
       images: imagePaths,
     });
 
-    console.log("Saved to DB ✅");
+    console.log("Saved to DB ");
 
     res.json(newPost);
   } catch (err) {
