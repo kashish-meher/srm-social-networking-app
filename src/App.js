@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import MessagesPage from './pages/MessagesPage';
 import MyDetailsPage from './pages/MyDetailsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import MyPostsPage from './pages/MyPostsPage';
 import SettingsPage from './pages/SettingsPage';
 import CreatePostPage from './pages/CreatePostPage';
 
@@ -20,6 +21,7 @@ function App() {
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/uploadpost" element={<CreatePostPage />} />
+        <Route path="/myposts" element={<MyPostsPage />} />
       </Routes>
     </BrowserRouter>
   );
