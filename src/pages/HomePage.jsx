@@ -8,6 +8,7 @@ const NAV = [
   { icon: '🏠', label: 'Home', path: '/home' },
   { icon: '📅', label: 'My Details', path: '/mydetails' },
   { icon: '📚', label: 'Messages', path: '/messages' },
+  { icon: '📝', label: 'My Posts', path: '/myposts' },
   { icon: '⚙️', label: 'Settings', path: '/settings' },
 ];
 
