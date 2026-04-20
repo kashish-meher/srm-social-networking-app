@@ -81,33 +81,39 @@ const handleSubmit = async () => {
   if (Object.keys(errs).length !== 0) return;
 
   try {
+    const token = localStorage.getItem("token"); // ✅ GET TOKEN
+
     const formData = new FormData();
     formData.append("content", content);
     formData.append("tags", JSON.stringify(tags));
 
-    // append images
+    // images
     images.forEach((img) => {
       formData.append("images", img.file);
     });
 
-    // OPTIONAL: user info
-    formData.append("userId", currentUser._id || currentUser.id);
-formData.append("userName", currentUser.name);
-
     const res = await fetch("http://localhost:5000/api/posts", {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ REQUIRED
+      },
       body: formData,
     });
 
     const data = await res.json();
+
     console.log("Saved:", data);
 
-    setSubmitted(true);
+    if (res.ok) {
+      setSubmitted(true);
+    } else {
+      console.error("Error:", data);
+    }
+
   } catch (err) {
     console.error("Upload failed:", err);
   }
 };
-
   const handleReset = () => {
     setContent("");
     setTags([]);

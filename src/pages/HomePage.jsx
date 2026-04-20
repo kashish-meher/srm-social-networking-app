@@ -12,100 +12,117 @@ const NAV = [
   { icon: '⚙️', label: 'Settings', path: '/settings' },
 ];
 
+function NavAvatar({ navigate }) {
+  const u = JSON.parse(localStorage.getItem('user') || '{}');
+  const pic = u?.profilePic;
+  const src = pic
+    ? (pic.startsWith('http') ? pic : `http://localhost:5000/${pic.replace(/\\/g, '/')}`)
+    : null;
+  return (
+    <div
+      onClick={() => navigate('/settings')}
+      style={{
+        width: 32, height: 32, borderRadius: '50%',
+        background: '#0e8888', overflow: 'hidden',
+        cursor: 'pointer', border: '2px solid #0e8888',
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'center', flexShrink: 0,
+      }}
+    >
+      {src
+        ? <img src={src} alt="u" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        : <span style={{ color: 'white', fontWeight: 700, fontSize: '0.8rem' }}>
+            {(u?.name || 'U')[0].toUpperCase()}
+          </span>
+      }
+    </div>
+  );
+}
+
+function PostAvatar({ post }) {
+  const u = JSON.parse(localStorage.getItem('user') || '{}');
+  const userId = u?.id || u?._id;
+  const isMe = post.userId === userId ||
+    (post.userName || '').toLowerCase() === (u?.name || '').toLowerCase();
+
+  const pic = isMe ? u?.profilePic : null;
+  const src = pic
+    ? (pic.startsWith('http') ? pic : `http://localhost:5000/${pic.replace(/\\/g, '/')}`)
+    : null;
+  const initial = (post.userName || post.user || 'U')[0].toUpperCase();
+
+  return (
+    <div className="hp-author-avatar" style={{ overflow: 'hidden', background: '#0e8888' }}>
+      {src
+        ? <img src={src} alt="u" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        : initial
+      }
+    </div>
+  );
+}
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('All Posts');
-  const currentUser = JSON.parse(localStorage.getItem("user"));
-  const [liked, setLiked] = useState({});
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [showCommentBox, setShowCommentBox] = useState(false);
-const [currentPost, setCurrentPost] = useState(null);
-const [commentText, setCommentText] = useState("");
-const [showConnectPopup, setShowConnectPopup] = useState(false);
-const [selectedUser, setSelectedUser] = useState(null);
+  const [currentPost, setCurrentPost] = useState(null);
+  const [commentText, setCommentText] = useState('');
+  const [showConnectPopup, setShowConnectPopup] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
-useEffect(() => {
-  fetch("http://localhost:5000/api/posts")
-    .then(res => res.json())
-    .then(data => setPosts(data))
-    .catch(err => console.error(err));
-}, []);
+  useEffect(() => {
+    fetch('http://localhost:5000/api/posts')
+      .then(res => res.json())
+      .then(data => setPosts(data))
+      .catch(err => console.error(err));
+  }, []);
 
-const filteredPosts = posts.filter((post) => {
-  const keyword = search.toLowerCase();
+  const filteredPosts = posts.filter(post => {
+    const keyword = search.toLowerCase();
+    const matchesSearch = !search.trim() ||
+      post.tags?.some(tag => tag.toLowerCase().includes(keyword));
+    const matchesTab = activeTab === 'All Posts' ||
+      post.tags?.some(tag => tag.toLowerCase() === activeTab.toLowerCase());
+    return matchesSearch && matchesTab;
+  });
 
-  // 🔹 SEARCH FILTER
-  const matchesSearch =
-    !search.trim() ||
-    post.tags?.some(tag =>
-      tag.toLowerCase().includes(keyword)
-    );
-
-  // 🔹 TAB FILTER
-  const matchesTab =
-    activeTab === "All Posts" ||
-    post.tags?.some(tag =>
-      tag.toLowerCase() === activeTab.toLowerCase()
-    );
-
-  return matchesSearch && matchesTab;
-});
-
-const handleUserClick = (postUser) => {
-  if (!postUser) return;
-
-  setSelectedUser(postUser);
-  setShowConnectPopup(true);
-};
-
-const openComment = (post) => {
-  setCurrentPost(post);
-  setShowCommentBox(true);
-};
-
-
-const submitComment = async () => {
-  if (!commentText.trim()) return;
-
-  const newComment = {
-    user: "You",
-    text: commentText,
-    createdAt: new Date()
+  const handleUserClick = (postUser) => {
+    if (!postUser) return;
+    setSelectedUser(postUser);
+    setShowConnectPopup(true);
   };
 
-  // 🔥 instant UI update
-  setPosts(prev =>
-    prev.map(p =>
+  const openComment = (post) => {
+    setCurrentPost(post);
+    setShowCommentBox(true);
+  };
+
+  const submitComment = async () => {
+    if (!commentText.trim()) return;
+    const newComment = { user: currentUser?.name || 'You', text: commentText, createdAt: new Date() };
+    setPosts(prev => prev.map(p =>
       p._id === currentPost._id
         ? { ...p, comments: [...(p.comments || []), newComment] }
         : p
-    )
-  );
+    ));
+    setCommentText('');
+    setShowCommentBox(false);
+    await fetch(`http://localhost:5000/api/posts/comment/${currentPost._id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newComment),
+    });
+  };
 
-  setCommentText("");
-  setShowCommentBox(false);
-
-  // 🔁 backend sync
-  await fetch(`http://localhost:5000/api/posts/comment/${currentPost._id}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newComment),
-  });
-};
-
-
-
-const handleLike = async (postId) => {
-  const userId = currentUser._id;
-
-  setPosts(prev =>
-    prev.map(p => {
+  const handleLike = async (postId) => {
+    const userId = currentUser?.id || currentUser?._id;
+    if (!userId) return;
+    setPosts(prev => prev.map(p => {
       if (p._id !== postId) return p;
-
       const alreadyLiked = p.likedBy?.includes(userId);
-
       return {
         ...p,
         likes: alreadyLiked ? p.likes - 1 : p.likes + 1,
@@ -113,27 +130,13 @@ const handleLike = async (postId) => {
           ? p.likedBy.filter(id => id !== userId)
           : [...(p.likedBy || []), userId],
       };
-    })
-  );
-
-  await fetch(`http://localhost:5000/api/posts/like/${postId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId }),
-  });
-};
-
-const handleComment = async (postId, text) => {
-  const res = await fetch(`http://localhost:5000/api/posts/comment/${postId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user: currentUser.name, text }),
-  });
-
-  const updated = await res.json();
-  setPosts(posts.map(p => p._id === postId ? updated : p));
-};
-
+    }));
+    await fetch(`http://localhost:5000/api/posts/like/${postId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    });
+  };
 
   return (
     <div className="hp-root">
@@ -145,18 +148,18 @@ const handleComment = async (postId, text) => {
           <input
             placeholder="Search ..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
           />
         </div>
         <div className="hp-nav-right">
           <button className="hp-icon-btn">🔔</button>
-          <button className="hp-icon-btn">💬</button>
-          <div className="hp-avatar">U</div>
+          <button className="hp-icon-btn" onClick={() => navigate('/messages')}>💬</button>
+          <NavAvatar navigate={navigate} />
         </div>
       </header>
 
       <div className="hp-body">
-        {/* LEFT SIDEBAR */}
+        {/* SIDEBAR */}
         <aside className="hp-sidebar">
           <div className="hp-brand-block">
             <div className="hp-brand-title">SRM Connect</div>
@@ -188,93 +191,92 @@ const handleComment = async (postId, text) => {
             ))}
           </div>
 
-          {/* GRID */}
-{/* GRID */}
-<div className="hp-grid">
+          <div className="hp-grid">
+            {/* LEFT: FEED */}
+            <div className="hp-feed">
+              {filteredPosts.length === 0 ? (
+                <div className="hp-empty">No posts yet</div>
+              ) : (
+                filteredPosts.map(post => (
+                  <div key={post._id} className="hp-post-big">
+                    <div className="hp-post-big-body">
+                      <div className="hp-author-row">
+                        <PostAvatar post={post} />
+                        <div>
+                          <div
+                            className="hp-author-name clickable"
+                            onClick={() => handleUserClick(post.userName || post.user)}
+                          >
+                            {post.userName || post.user || 'Unknown'}
+                          </div>
+                          <div className="hp-author-meta">
+                            {new Date(post.createdAt).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
 
-  {/* LEFT: FEED */}
-  <div className="hp-feed">
-    {filteredPosts.length === 0 ? (
-      <div className="hp-empty">No posts yet</div>
-    ) : (
-      filteredPosts.map(post => (
-        <div key={post._id} className="hp-post-big">
-          <div className="hp-post-big-body">
-            <div className="hp-author-row">
-              <div className="hp-author-avatar">{(post.userName || post.user || "U")[0]}</div>
-              <div>
-<div
-  className="hp-author-name clickable"
-  onClick={() =>
-handleUserClick(post.userName || post.user)
-  }
->
- {post.userName || post.user || "Unknown"}
-</div>
-                <div className="hp-author-meta">
-                  {new Date(post.createdAt).toLocaleString()}
-                </div>
-              </div>
-            </div>
+                      <p className="hp-post-body">{post.content}</p>
 
-            <p className="hp-post-body">{post.content}</p>
-
-            {/* images */}
-<div className="hp-image-grid">
-  {post.images?.slice(0, 4).map((img, i) => (
-    <img
-      key={i}
-      src={`http://localhost:5000/${img}`}
-      className="hp-post-img"
-    />
-  ))}
-</div>
-
-            {/* tags */}
-            <div style={{ marginTop: "8px" }}>
-              {post.tags?.map((tag, i) => (
-                <span key={i} style={{ marginRight: "6px", color: "#0ea5b0" }}>
-                  #{tag}
-                </span>
-              ))}
-            </div>
-
-<div className="hp-post-actions">
-<span
-  onClick={() => handleLike(post._id)}
-  className={`hp-action ${
-    post.likedBy?.includes("You") ? "liked" : ""
-  }`}
->
-  ❤️ {post.likes || 0}
-</span>
-
-  <span onClick={() => openComment(post)} className="hp-action">
-    💬 {post.comments?.length || 0}
-  </span>
-</div>
-
-
-
-{/* Show comments */}
-<div className="hp-comments">
-  {post.comments?.map((c, i) => (
-    <div key={i}>
-      <b>{c.user}</b>: {c.text}
-    </div>
-  ))}
-</div>
-
-
-          </div>
-        </div>
-      ))
-    )}
+                      {/* Images */}
+                      {post.images?.filter(img => img && img.trim() !== '').length > 0 && (
+  <div className="hp-image-grid">
+    {post.images
+      .filter(img => img && img.trim() !== '')
+      .slice(0, 4)
+      .map((img, i) => {
+        const cleanPath = img.replace(/\\/g, '/').replace(/^\//, '');
+        const url = `http://localhost:5000/${cleanPath}`;
+        return (
+          <img
+            key={i}
+            src={url}
+            className="hp-post-img"
+            alt="post"
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
+        );
+      })}
   </div>
+)}
 
-  {/* RIGHT: SIDEBAR */}          
-      <div className="hp-small-col">
-              {/* RENT CARD */}
+                      {/* Tags */}
+                      <div style={{ marginTop: 8 }}>
+                        {post.tags?.map((tag, i) => (
+                          <span key={i} style={{ marginRight: 6, color: '#0ea5b0' }}>
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="hp-post-actions">
+                        <span
+                          onClick={() => handleLike(post._id)}
+                          className={`hp-action${post.likedBy?.includes(currentUser?.id || currentUser?._id) ? ' liked' : ''}`}
+                        >
+                          ❤️ {post.likes || 0}
+                        </span>
+                        <span onClick={() => openComment(post)} className="hp-action">
+                          💬 {post.comments?.length || 0}
+                        </span>
+                      </div>
+
+                      {/* Comments */}
+                      {post.comments?.length > 0 && (
+                        <div className="hp-comments">
+                          {post.comments.map((c, i) => (
+                            <div key={i}><b>{c.user}</b>: {c.text}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* RIGHT SIDEBAR */}
+            <div className="hp-small-col">
               <div className="hp-rent-card">
                 <div className="hp-rent-header">
                   <span className="hp-tag tag-rent">RENT</span>
@@ -286,7 +288,6 @@ handleUserClick(post.userName || post.user)
                 <button className="hp-contact-btn">Contact Owner</button>
               </div>
 
-              {/* PRODUCT CARD */}
               <div className="hp-product-card">
                 <img src="https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=300&q=80" alt="book" className="hp-product-img" />
                 <div className="hp-product-info">
@@ -300,7 +301,6 @@ handleUserClick(post.userName || post.user)
                 </div>
               </div>
 
-              {/* EVENT CARD */}
               <div className="hp-event-card">
                 <div className="hp-tag tag-events">EVENTS</div>
                 <div className="hp-event-title">HackSRM 2026</div>
@@ -312,67 +312,47 @@ handleUserClick(post.userName || post.user)
                 <button className="hp-register-btn">Register Now</button>
               </div>
             </div>
-
-
           </div>
-          
         </main>
       </div>
 
       {/* FAB */}
-      <button className="hp-fab" onClick={() => navigate("/uploadpost")}>+</button>
+      <button className="hp-fab" onClick={() => navigate('/uploadpost')}>+</button>
 
+      {/* COMMENT MODAL */}
       {showCommentBox && (
-  <div className="hp-modal-overlay">
-    <div className="hp-modal">
-      <h3>Add Comment</h3>
+        <div className="hp-modal-overlay">
+          <div className="hp-modal">
+            <h3>Add Comment</h3>
+            <textarea
+              placeholder="Write something..."
+              value={commentText}
+              onChange={e => setCommentText(e.target.value)}
+            />
+            <div className="hp-modal-actions">
+              <button onClick={() => setShowCommentBox(false)}>Cancel</button>
+              <button onClick={submitComment}>Post</button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      <textarea
-        placeholder="Write something..."
-        value={commentText}
-        onChange={(e) => setCommentText(e.target.value)}
-      />
-
-      <div className="hp-modal-actions">
-        <button onClick={() => setShowCommentBox(false)}>Cancel</button>
-        <button onClick={submitComment}>Post</button>
-      </div>
-    </div>
-  </div>
-)}
-
-{showConnectPopup && (
-  <div className="hp-modal-overlay">
-    <div className="hp-modal">
-      <h3>Connect</h3>
-
-      <p>
-        Connect with <b>{selectedUser}</b>?
-      </p>
-
-      <div className="hp-modal-actions">
-        <button onClick={() => setShowConnectPopup(false)}>
-          Cancel
-        </button>
-
-        <button
-          onClick={() => {
-            setShowConnectPopup(false);
-
-            // 🔥 Navigate to chat
-            navigate("/messages", {
-              state: { user: selectedUser },
-            });
-          }}
-        >
-          Chat
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
+      {/* CONNECT POPUP */}
+      {showConnectPopup && (
+        <div className="hp-modal-overlay">
+          <div className="hp-modal">
+            <h3>Connect</h3>
+            <p>Connect with <b>{selectedUser}</b>?</p>
+            <div className="hp-modal-actions">
+              <button onClick={() => setShowConnectPopup(false)}>Cancel</button>
+              <button onClick={() => {
+                setShowConnectPopup(false);
+                navigate('/messages', { state: { user: selectedUser } });
+              }}>Chat</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

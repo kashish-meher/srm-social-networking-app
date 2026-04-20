@@ -2,12 +2,27 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// REGISTER
+// ================= MIDDLEWARE: Verify Token =================
+export const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+};
+
+// ================= REGISTER =================
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // validation
     if (!email.match(/@srmist\.edu\.in$|@srmuniversity\.ac\.in$/)) {
       return res.status(400).json({ message: "Invalid SRM email" });
     }
@@ -17,7 +32,6 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
@@ -26,32 +40,43 @@ export const registerUser = async (req, res) => {
       password: hashedPassword
     });
 
-    res.status(201).json({ message: "User registered successfully" });
+    const token = jwt.sign(
+      { id: user._id, name: user.name },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
 
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// LOGIN
+// ================= LOGIN =================
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     const token = jwt.sign(
-      { id: user._id },
+      { id: user._id, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -61,10 +86,37 @@ export const loginUser = async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        profilePic: user.profilePic || ''
       }
     });
 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ================= UPDATE SETTINGS =================
+export const updateSettings = async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, {
+      settings: req.body
+    });
+    res.json({ message: 'Settings saved' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ================= UPLOAD PROFILE PIC =================
+export const uploadProfilePic = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    const url = req.file.path.replace(/\\/g, '/');
+    await User.findByIdAndUpdate(req.user.id, { profilePic: url });
+    res.json({ profilePicUrl: url });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
