@@ -8,6 +8,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import MyPostsPage from './pages/MyPostsPage';
 import SettingsPage from './pages/SettingsPage';
 import CreatePostPage from './pages/CreatePostPage';
+import FeedbackPage from './pages/FeedbackPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/uploadpost" element={<CreatePostPage />} />
         <Route path="/myposts" element={<MyPostsPage />} />
+         <Route path="/feedback" element={<FeedbackPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import Layout from "./Layout";
 import { Image, X, ChevronDown, AlertCircle, CheckCircle2, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const SUGGESTED_TAGS = [
   "Computer Science", "Artificial Intelligence", "Web Development", "Cloud Computing",
@@ -17,10 +18,11 @@ export default function CreatePostPage() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
-
+  const navigate = useNavigate();
   // ── Tag helpers ──────────────────────────────────────────────
   const addTag = (tag) => {
     const trimmed = tag.trim();
@@ -104,9 +106,13 @@ const handleSubmit = async () => {
 
     console.log("Saved:", data);
 
-    if (res.ok) {
-      setSubmitted(true);
-    } else {
+if (res.ok) {
+  setShowSuccess(true);
+
+  setTimeout(() => {
+    navigate("/home");
+  }, 1200);
+} else {
       console.error("Error:", data);
     }
 
@@ -123,25 +129,6 @@ const handleSubmit = async () => {
     setSubmitted(false);
   };
 
-  // ── Success screen ───────────────────────────────────────────
-  if (submitted) {
-    return (
-      <Layout searchPlaceholder="Search communities...">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontFamily: "'DM Sans', sans-serif" }}>
-          <div style={{ textAlign: "center", padding: 40 }}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-              <CheckCircle2 size={32} color="#16a34a" />
-            </div>
-            <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 700, color: "#1e293b" }}>Post Published!</h2>
-            <p style={{ margin: "0 0 24px", fontSize: 14, color: "#64748b" }}>Your post is now live on SRM Connect.</p>
-            <button onClick={handleReset} style={{ background: "#0ea5b0", color: "#fff", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              Create Another Post
-            </button>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
 
   return (
     <Layout searchPlaceholder="Search communities...">
@@ -172,7 +159,7 @@ const handleSubmit = async () => {
                 setContent(e.target.value);
                 if (e.target.value.trim().length >= 10) setErrors((er) => ({ ...er, content: undefined }));
               }}
-              placeholder="What's on your mind, ${currentUser?.name}  ? Share updates, questions, or resources…"
+              placeholder={`What's on your mind, ${currentUser?.name}? Share updates, questions, or resources…`}
               rows={5}
               style={{
                 width: "100%", resize: "none", border: "none", outline: "none",
@@ -332,6 +319,15 @@ const handleSubmit = async () => {
           💡 <strong>Tips:</strong> Add relevant tags so your post reaches the right people. You can upload up to 4 images per post.
         </div>
       </div>
+    
+      {showSuccess && (
+  <div className="hp-modal-overlay">
+    <div className="hp-modal" style={{ textAlign: "center" }}>
+      <h3>✅ Post Published</h3>
+      <p>Your post is now live!</p>
+    </div>
+  </div>
+)}
     </Layout>
   );
 }

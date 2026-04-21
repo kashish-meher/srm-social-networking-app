@@ -18,7 +18,6 @@ export default function RegisterPage() {
     setForm(prev => ({ ...prev, [field]: val }));
   };
 
-  // ✅ UPDATED HANDLE SUBMIT (CONNECTED TO BACKEND)
   const handleSubmit = async (e) => {
     e.preventDefault();
 

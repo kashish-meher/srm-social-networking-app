@@ -73,13 +73,24 @@ export default function HomePage() {
   const [showConnectPopup, setShowConnectPopup] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/posts')
-      .then(res => res.json())
-      .then(data => setPosts(data))
-      .catch(err => console.error(err));
-  }, []);
+useEffect(() => {
+  fetch('http://localhost:5000/api/posts')
+    .then(res => res.json())
+    .then(data => {
+      console.log("API RESPONSE:", data);
 
+      if (Array.isArray(data)) {
+        setPosts(data);
+      } else {
+        console.error("Expected array, got:", data);
+        setPosts([]);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      setPosts([]);
+    });
+}, []);
   const filteredPosts = posts.filter(post => {
     const keyword = search.toLowerCase();
     const matchesSearch = !search.trim() ||
@@ -102,7 +113,11 @@ export default function HomePage() {
 
   const submitComment = async () => {
     if (!commentText.trim()) return;
-    const newComment = { user: currentUser?.name || 'You', text: commentText, createdAt: new Date() };
+    const newComment = {
+  userName: currentUser?.name || 'You',
+  text: commentText,
+  createdAt: new Date()
+};
     setPosts(prev => prev.map(p =>
       p._id === currentPost._id
         ? { ...p, comments: [...(p.comments || []), newComment] }
@@ -110,11 +125,21 @@ export default function HomePage() {
     ));
     setCommentText('');
     setShowCommentBox(false);
-    await fetch(`http://localhost:5000/api/posts/comment/${currentPost._id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newComment),
-    });
+const res = await fetch(`http://localhost:5000/api/posts/comment/${currentPost._id}`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`
+  },
+  body: JSON.stringify({ text: commentText })
+});
+
+const updatedPost = await res.json();
+setCurrentPost(updatedPost);
+
+setPosts(prev =>
+  prev.map(p => p._id === updatedPost._id ? updatedPost : p)
+);
   };
 
   const handleLike = async (postId) => {
@@ -131,11 +156,19 @@ export default function HomePage() {
           : [...(p.likedBy || []), userId],
       };
     }));
-    await fetch(`http://localhost:5000/api/posts/like/${postId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
-    });
+const res = await fetch(`http://localhost:5000/api/posts/like/${postId}`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`
+  }
+});
+
+const updatedPost = await res.json();
+
+setPosts(prev =>
+  prev.map(p => p._id === updatedPost._id ? updatedPost : p)
+);
   };
 
   return (
@@ -152,7 +185,7 @@ export default function HomePage() {
           />
         </div>
         <div className="hp-nav-right">
-          <button className="hp-icon-btn">🔔</button>
+          <button className="hp-icon-btn" onClick={() => navigate('/notifications')}>🔔</button>
           <button className="hp-icon-btn" onClick={() => navigate('/messages')}>💬</button>
           <NavAvatar navigate={navigate} />
         </div>
@@ -205,7 +238,10 @@ export default function HomePage() {
                         <div>
                           <div
                             className="hp-author-name clickable"
-                            onClick={() => handleUserClick(post.userName || post.user)}
+                            onClick={() => handleUserClick({
+                              userId: post.userId,
+                              userName: post.userName || post.user
+                            })}
                           >
                             {post.userName || post.user || 'Unknown'}
                           </div>
@@ -256,19 +292,19 @@ export default function HomePage() {
                         >
                           ❤️ {post.likes || 0}
                         </span>
-                        <span onClick={() => openComment(post)} className="hp-action">
-                          💬 {post.comments?.length || 0}
-                        </span>
+<span
+onClick={() => {
+  setCurrentPost(post);
+  setShowCommentBox(true);
+}}
+  className="hp-action"
+>
+  💬 {post.comments?.length || 0}
+</span>
                       </div>
 
                       {/* Comments */}
-                      {post.comments?.length > 0 && (
-                        <div className="hp-comments">
-                          {post.comments.map((c, i) => (
-                            <div key={i}><b>{c.user}</b>: {c.text}</div>
-                          ))}
-                        </div>
-                      )}
+
                     </div>
                   </div>
                 ))
@@ -320,35 +356,60 @@ export default function HomePage() {
       <button className="hp-fab" onClick={() => navigate('/uploadpost')}>+</button>
 
       {/* COMMENT MODAL */}
-      {showCommentBox && (
-        <div className="hp-modal-overlay">
-          <div className="hp-modal">
-            <h3>Add Comment</h3>
-            <textarea
-              placeholder="Write something..."
-              value={commentText}
-              onChange={e => setCommentText(e.target.value)}
-            />
-            <div className="hp-modal-actions">
-              <button onClick={() => setShowCommentBox(false)}>Cancel</button>
-              <button onClick={submitComment}>Post</button>
+{showCommentBox && currentPost && (
+  <div className="hp-modal-overlay">
+    <div className="hp-modal">
+      <h3>Comments</h3>
+
+      {/* Existing comments */}
+      <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 10 }}>
+        {currentPost.comments?.length > 0 ? (
+          currentPost.comments.map((c, i) => (
+            <div key={i}>
+              <b>{c.userName}</b>: {c.text}
             </div>
-          </div>
-        </div>
-      )}
+          ))
+        ) : (
+          <p>No comments yet</p>
+        )}
+      </div>
+
+      {/* Add new comment */}
+      <textarea
+        placeholder="Write something..."
+        value={commentText}
+        onChange={e => setCommentText(e.target.value)}
+      />
+
+      <div className="hp-modal-actions">
+        <button onClick={() => setShowCommentBox(false)}>Close</button>
+        <button onClick={submitComment}>Post</button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* CONNECT POPUP */}
       {showConnectPopup && (
         <div className="hp-modal-overlay">
           <div className="hp-modal">
             <h3>Connect</h3>
-            <p>Connect with <b>{selectedUser}</b>?</p>
+            <p>Connect with <b>{selectedUser?.userName}</b>?</p>
             <div className="hp-modal-actions">
               <button onClick={() => setShowConnectPopup(false)}>Cancel</button>
               <button onClick={() => {
-                setShowConnectPopup(false);
-                navigate('/messages', { state: { user: selectedUser } });
-              }}>Chat</button>
+  if (!selectedUser?.userId) {
+    alert("Can't chat with this user — missing profile data.");
+    return;
+  }
+  setShowConnectPopup(false);
+  navigate('/messages', {
+    state: {
+      userId: selectedUser.userId,
+      userName: selectedUser.userName
+    }
+  });
+}}>Chat</button>
             </div>
           </div>
         </div>

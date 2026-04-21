@@ -40,7 +40,7 @@ router.post("/", authMiddleware, upload.array("images", 4), async (req, res) => 
     res.json(newPost);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to save" });
+    res.status(500).json({ error: err.message });
   }
 });
 

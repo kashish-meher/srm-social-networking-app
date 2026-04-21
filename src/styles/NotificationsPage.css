@@ -1,0 +1,261 @@
+/* NotificationsPage.css — matches SRM Connect design system */
+
+.np-root {
+  min-height: 100vh;
+  background: #f4f6fb;
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOP NAV ── */
+.np-topnav {
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid #e5e9f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.np-logo { font-weight: 800; font-size: 1.2rem; color: #0e8888; letter-spacing: -0.5px; }
+.np-nav-right { display: flex; align-items: center; gap: 10px; }
+.np-icon-btn {
+  background: none; border: none; font-size: 1.2rem;
+  cursor: pointer; padding: 6px; border-radius: 8px;
+  transition: background 0.15s;
+}
+.np-icon-btn:hover { background: #f0fafa; }
+
+/* ── BODY ── */
+.np-body { display: flex; flex: 1; }
+
+/* ── SIDEBAR ── */
+.np-sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: #fff;
+  border-right: 1px solid #e5e9f0;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+.np-brand-block { padding: 0 8px; }
+.np-brand-title { font-weight: 800; font-size: 1rem; color: #0e8888; }
+.np-brand-sub { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
+.np-nav { display: flex; flex-direction: column; gap: 4px; }
+.np-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  border: none; background: none; cursor: pointer;
+  font-size: 0.88rem; color: #475569; font-weight: 500;
+  text-align: left; transition: all 0.15s;
+}
+.np-nav-item:hover { background: #f0fafa; color: #0e8888; }
+.np-nav-item.active { background: #e6f7f7; color: #0e8888; font-weight: 700; }
+
+/* ── MAIN ── */
+.np-main {
+  flex: 1;
+  padding: 32px 40px;
+  max-width: 780px;
+}
+
+.np-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.np-page-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+.np-badge {
+  background: #0e8888;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  vertical-align: middle;
+}
+.np-page-sub { color: #94a3b8; font-size: 0.88rem; margin: 4px 0 0; }
+
+.np-mark-all-btn {
+  background: #e6f7f7;
+  color: #0e8888;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.np-mark-all-btn:hover { background: #c9eeed; }
+
+/* ── FILTERS ── */
+.np-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.np-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 99px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.np-filter-btn:hover { border-color: #0e8888; color: #0e8888; }
+.np-filter-btn.active {
+  background: #0e8888;
+  border-color: #0e8888;
+  color: #fff;
+}
+.np-filter-count {
+  background: rgba(255,255,255,0.25);
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 99px;
+  font-weight: 700;
+}
+.np-filter-btn:not(.active) .np-filter-count {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* ── LIST ── */
+.np-list { display: flex; flex-direction: column; gap: 0; }
+
+.np-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  background: #fff;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+  border-radius: 0;
+}
+.np-list .np-item:first-child { border-radius: 14px 14px 0 0; }
+.np-list .np-item:last-child { border-radius: 0 0 14px 14px; border-bottom: none; }
+.np-list .np-item:only-child { border-radius: 14px; border-bottom: none; }
+.np-item:hover { background: #f8fdfd; }
+.np-item.unread { background: #f0fbfb; }
+.np-item.unread:hover { background: #e8f8f8; }
+
+.np-unread-dot {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #0e8888;
+}
+
+.np-type-bubble {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.np-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #0e8888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.np-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.np-content { flex: 1; min-width: 0; }
+.np-notif-text { font-size: 0.88rem; color: #334155; line-height: 1.4; }
+.np-notif-text b { color: #0f172a; }
+.np-preview {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #f8fafc;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #0e888840;
+}
+.np-time { margin-top: 5px; font-size: 0.75rem; color: #b0bec5; }
+
+.np-delete-btn {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  align-self: center;
+}
+.np-delete-btn:hover { background: #fee2e2; color: #ef4444; }
+
+/* ── EMPTY ── */
+.np-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #94a3b8;
+  background: #fff;
+  border-radius: 14px;
+}
+.np-empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+.np-empty-text { font-size: 0.95rem; font-weight: 500; }
+
+@media (max-width: 768px) {
+  .np-sidebar { display: none; }
+  .np-main { padding: 20px 16px; }
+}
