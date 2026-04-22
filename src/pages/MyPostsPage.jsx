@@ -73,6 +73,9 @@ export default function MyPostsPage() {
   const [editContent, setEditContent] = useState('');
   const [editTags, setEditTags] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [newComment, setNewComment] = useState('');
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const currentUserName = currentUser?.name || currentUser?.email || 'User';
@@ -137,6 +140,37 @@ export default function MyPostsPage() {
     setEditContent(post.content || '');
     setEditTags((post.tags || []).join(', '));
   };
+
+  const openComments = (post) => {
+  setSelectedPost(post);
+  setShowComments(true);
+};
+
+const handleAddComment = async () => {
+  if (!newComment.trim() || !selectedPost) return;
+
+  try {
+    const res = await fetch(`http://localhost:5000/api/posts/comment/${selectedPost._id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user: currentUserName,
+        text: newComment
+      }),
+    });
+
+    const updatedPost = await res.json();
+
+    setPosts(prev =>
+      prev.map(p => p._id === updatedPost._id ? updatedPost : p)
+    );
+
+    setSelectedPost(updatedPost);
+    setNewComment('');
+  } catch (err) {
+    console.error('Comment error:', err);
+  }
+};
 
   const handleSaveEdit = async () => {
     if (!editContent.trim()) return;
@@ -289,7 +323,13 @@ export default function MyPostsPage() {
                     >
                       {liked[post._id] ? '❤️' : '♡'} {(post.likes || 0) + (liked[post._id] ? 1 : 0)}
                     </button>
-                    <span className="mp-comment-count">💬 {post.comments?.length || 0}</span>
+                    <span
+  className="mp-comment-count"
+  onClick={() => openComments(post)}
+  style={{ cursor: 'pointer' }}
+>
+  💬 {post.comments?.length || 0}
+</span>
                     <span className="mp-post-date">
                       {new Date(post.createdAt).toLocaleDateString('en-IN', {
                         day: 'numeric', month: 'short', year: 'numeric'
@@ -330,6 +370,43 @@ export default function MyPostsPage() {
 
       <button className="mp-fab" onClick={() => navigate('/uploadpost')}>+</button>
 
+      {showComments && selectedPost && (
+  <div className="mp-modal-overlay" onClick={() => setShowComments(false)}>
+    <div className="mp-modal" onClick={(e) => e.stopPropagation()}>
+
+      <div className="mp-modal-header">
+        <h3>Comments</h3>
+        <button className="mp-modal-close" onClick={() => setShowComments(false)}>✕</button>
+      </div>
+
+      <div className="mp-modal-body" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+        {selectedPost.comments?.length > 0 ? (
+          selectedPost.comments.map((c, i) => (
+            <div key={i} className="mp-comment-item">
+              <b>{c.user}</b>: {c.text}
+            </div>
+          ))
+        ) : (
+          <div>No comments yet</div>
+        )}
+      </div>
+
+      <div className="mp-modal-footer" style={{ display: 'flex', gap: 10 }}>
+        <input
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="Write a comment..."
+          style={{ flex: 1, padding: 8 }}
+        />
+        <button className="mp-modal-save" onClick={handleAddComment}>
+          Post
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+      
       {/* EDIT MODAL */}
       {editPost && (
         <div className="mp-modal-overlay" onClick={() => setEditPost(null)}>

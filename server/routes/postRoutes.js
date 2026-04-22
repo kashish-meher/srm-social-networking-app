@@ -129,4 +129,26 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   }
 });
 
+
+// ================= UPDATE POST =================
+router.put("/:id", authMiddleware, async (req, res) => {
+  try {
+    const { content, tags } = req.body;
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.id,
+      {
+        content,
+        tags
+      },
+      { new: true } // ✅ THIS IS CRITICAL
+    );
+
+    res.json(updatedPost); // ✅ RETURN UPDATED POST
+  } catch (err) {
+    console.error("UPDATE ERROR:", err);
+    res.status(500).json({ error: "Update failed" });
+  }
+});
+
 export default router;

@@ -460,9 +460,9 @@ export default function SettingsPage() {
               <div style={{ padding: '0 24px' }}>
                 {[
                   { key: 'privateProfile', icon: '🔒', title: 'Private Profile', desc: 'Only approved students can see your full activity.', type: 'toggle' },
-                  { key: 'twoFactor', icon: '🔑', title: 'Two-Factor Authentication', desc: 'Add an extra layer of security to your SRM account.', type: 'link', linkText: 'Enable' },
                   { key: 'pushNotifications', icon: '🔔', title: 'Push Notifications', desc: 'Get alerted about event reminders and direct messages.', type: 'toggle' },
                   { key: 'showOnlineStatus', icon: '👁️', title: 'Show Online Status', desc: 'Show others when you are active on the platform.', type: 'toggle' },
+                  { key: 'feedback', icon: '📝', title: 'Feedback', desc: 'Share your experience or report issues.', type: 'link', linkText: 'Open' },
                 ].map(({ key, icon, title, desc, type, linkText }, idx, arr) => (
                   <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 0', borderBottom: idx < arr.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
                     <div style={{ width: 38, height: 38, borderRadius: 10, background: '#f0fdfe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>
@@ -476,8 +476,15 @@ export default function SettingsPage() {
                       <Toggle checked={prefs[key] || false} onChange={val => updatePref(key, val)} />
                     )}
                     {type === 'link' && (
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#0e8888', cursor: 'pointer' }}>{linkText}</span>
-                    )}
+  <span
+    onClick={() => {
+      if (key === 'feedback') navigate('/feedback');
+    }}
+    style={{ fontSize: 13, fontWeight: 600, color: '#0e8888', cursor: 'pointer' }}
+  >
+    {linkText}
+  </span>
+)}
                   </div>
                 ))}
               </div>
