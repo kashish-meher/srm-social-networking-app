@@ -73,24 +73,30 @@ export default function HomePage() {
   const [showConnectPopup, setShowConnectPopup] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-useEffect(() => {
-  fetch('http://localhost:5000/api/posts')
-    .then(res => res.json())
-    .then(data => {
-      console.log("API RESPONSE:", data);
+  // ✅ SINGLE FETCH FUNCTION
+const fetchPosts = async () => {
+  try {
+    const res = await fetch('http://localhost:5000/api/posts');
+    const data = await res.json();
+    setPosts(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error(err);
+    setPosts([]);
+  }
+};
 
-      if (Array.isArray(data)) {
-        setPosts(data);
-      } else {
-        console.error("Expected array, got:", data);
-        setPosts([]);
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      setPosts([]);
-    });
+// ✅ FETCH ON PAGE LOAD
+useEffect(() => {
+  fetchPosts();
 }, []);
+
+// ✅ REFETCH WHEN USER RETURNS TO TAB
+useEffect(() => {
+  const handleFocus = () => fetchPosts();
+  window.addEventListener('focus', handleFocus);
+  return () => window.removeEventListener('focus', handleFocus);
+}, []);
+
   const filteredPosts = posts.filter(post => {
     const keyword = search.toLowerCase();
     const matchesSearch = !search.trim() ||

@@ -27,7 +27,7 @@ export default function Layout({ children }) {
           <input placeholder="Search ..." />
         </div>
         <div className="hp-nav-right">
-          <button className="hp-icon-btn">🔔</button>
+          <button className="hp-icon-btn" onClick={() => navigate('/notifications')}>🔔</button>
           <button className="hp-icon-btn" onClick={() => navigate('/messages')}>💬</button>
           <div className="hp-avatar">{currentUserName?.[0]?.toUpperCase() || 'U'}</div>
         </div>

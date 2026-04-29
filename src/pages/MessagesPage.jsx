@@ -21,6 +21,7 @@ function NavAvatar({ navigate }) {
   return (
     <div
       onClick={() => navigate('/settings')}
+      
       style={{
         width: 32, height: 32, borderRadius: '50%',
         background: '#0e8888', overflow: 'hidden',
@@ -226,7 +227,7 @@ useEffect(() => {
       <header style={{ position: 'sticky', top: 0, zIndex: 100, background: 'white', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 16, padding: '0 20px', height: 52, flexShrink: 0 }}>
         <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: '1rem', color: '#0e8888', minWidth: 130 }}>SRM Connect</div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, padding: 6, borderRadius: 8 }}>🔔</button>
+          <button onClick={() => navigate('/notifications')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, padding: 6, borderRadius: 8 }}>🔔</button>
           <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, padding: 6, borderRadius: 8 }}>💬</button>
           <NavAvatar navigate={navigate} />
         </div>

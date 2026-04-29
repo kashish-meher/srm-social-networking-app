@@ -173,31 +173,38 @@ const handleAddComment = async () => {
 };
 
   const handleSaveEdit = async () => {
-    if (!editContent.trim()) return;
-    setSaving(true);
-    try {
-      const updatedTags = editTags.split(',').map(t => t.trim()).filter(Boolean);
-      const res = await fetch(`http://localhost:5000/api/posts/${editPost._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ content: editContent, tags: updatedTags }),
-      });
-      if (res.ok) {
-        setPosts(prev => prev.map(p => p._id === editPost._id ? { ...p, content: editContent, tags: updatedTags } : p));
-      } else {
-        setPosts(prev => prev.map(p => p._id === editPost._id ? { ...p, content: editContent, tags: updatedTags } : p));
-      }
+  if (!editContent.trim()) return;
+  setSaving(true);
+  try {
+    const updatedTags = editTags.split(',').map(t => t.trim()).filter(Boolean);
+    
+    const res = await fetch(`http://localhost:5000/api/posts/${editPost._id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify({ content: editContent, tags: updatedTags }),
+    });
+
+    if (res.ok) {
+      const updatedPost = await res.json(); // ✅ use server response
+      setPosts(prev => prev.map(p => 
+        p._id === editPost._id ? updatedPost : p  // ✅ replace with full updated post
+      ));
       setEditPost(null);
-    } catch (err) {
-      setPosts(prev => prev.map(p => p._id === editPost._id ? { ...p, content: editContent, tags: editTags.split(',').map(t => t.trim()).filter(Boolean) } : p));
-      setEditPost(null);
-    } finally {
-      setSaving(false);
+    } else {
+      const err = await res.json();
+      console.error('Update failed:', err);
+      alert('Failed to update post. Try again.');
     }
-  };
+  } catch (err) {
+    console.error('Network error:', err);
+    alert('Network error. Check your connection.');
+  } finally {
+    setSaving(false);
+  }
+};
 
   return (
     <div className="mp-root">
@@ -209,7 +216,7 @@ const handleAddComment = async () => {
           <input placeholder="Search ..." />
         </div>
         <div className="mp-nav-right">
-          <button className="mp-icon-btn">🔔</button>
+          <button className="hp-icon-btn" onClick={() => navigate('/notifications')}>🔔</button>
           <button className="mp-icon-btn" onClick={() => navigate('/messages')}>💬</button>
           <NavAvatar navigate={navigate} />
         </div>

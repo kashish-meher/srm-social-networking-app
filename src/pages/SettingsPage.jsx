@@ -26,6 +26,7 @@ const Toggle = ({ checked, onChange }) => (
   </div>
 );
 
+// ✅ FIXED: all routes now point to /api/users
 const API = 'http://localhost:5000/api';
 
 export default function SettingsPage() {
@@ -57,10 +58,10 @@ export default function SettingsPage() {
   const [savedMsg, setSavedMsg] = useState('');
   const [joinedDate, setJoinedDate] = useState('');
 
-  // Load from MongoDB on mount
+  // ✅ FIXED: /api/users/profile instead of /api/auth/profile
   useEffect(() => {
     if (!userId) return;
-    fetch(`${API}/auth/profile/${userId}`)
+    fetch(`${API}/users/profile/${userId}`)
       .then(r => r.json())
       .then(user => {
         if (user.prefs) setPrefs(user.prefs);
@@ -70,12 +71,16 @@ export default function SettingsPage() {
         if (user.profilePic) setProfilePic(user.profilePic);
         if (user.createdAt) setJoinedDate(user.createdAt);
 
-        // Sync localStorage user with latest from DB
         const stored = JSON.parse(localStorage.getItem('user') || '{}');
-        localStorage.setItem('user', JSON.stringify({ ...stored, profilePic: user.profilePic, bio: user.bio, location: user.location, website: user.website }));
+        localStorage.setItem('user', JSON.stringify({
+          ...stored,
+          profilePic: user.profilePic,
+          bio: user.bio,
+          location: user.location,
+          website: user.website,
+        }));
       })
       .catch(() => {
-        // fallback to localStorage
         const stored = JSON.parse(localStorage.getItem('user') || '{}');
         if (stored.profilePic) setProfilePic(stored.profilePic);
         if (stored.bio) { setBio(stored.bio); setBioInput(stored.bio); }
@@ -89,15 +94,14 @@ export default function SettingsPage() {
     setTimeout(() => setSavedMsg(''), 2000);
   };
 
+  // ✅ FIXED: /api/users/settings instead of /api/auth/settings
   const saveToBackend = async (data) => {
     try {
-      const res = await fetch(`${API}/auth/settings/${userId}`, {
+      await fetch(`${API}/users/settings/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      const updated = await res.json();
-      // Keep localStorage in sync
       const stored = JSON.parse(localStorage.getItem('user') || '{}');
       localStorage.setItem('user', JSON.stringify({ ...stored, ...data }));
       showSaved();
@@ -106,14 +110,12 @@ export default function SettingsPage() {
     }
   };
 
-  // Auto-save prefs on toggle
   const updatePref = (key, val) => {
     const newPrefs = { ...prefs, [key]: val };
     setPrefs(newPrefs);
     saveToBackend({ prefs: newPrefs, bio, website, location: userLocation });
   };
 
-  // Bio
   const handleBioSave = () => {
     const trimmed = bioInput.trim();
     setBio(trimmed);
@@ -121,7 +123,6 @@ export default function SettingsPage() {
     saveToBackend({ prefs, bio: trimmed, website, location: userLocation });
   };
 
-  // Website
   const handleWebsiteSave = () => {
     let url = websiteInput.trim();
     if (url && !url.startsWith('http')) url = 'https://' + url;
@@ -130,23 +131,24 @@ export default function SettingsPage() {
     setEditingWebsite(false);
     saveToBackend({ prefs, bio, website: url, location: userLocation });
   };
+
   const handleWebsiteDelete = () => {
     setWebsite(''); setWebsiteInput(''); setEditingWebsite(false);
     saveToBackend({ prefs, bio, website: '', location: userLocation });
   };
 
-  // Location
   const handleLocationSave = () => {
     const loc = locationInput.trim();
     setUserLocation(loc); setEditingLocation(false);
     saveToBackend({ prefs, bio, website, location: loc });
   };
+
   const handleLocationDelete = () => {
     setUserLocation(''); setLocationInput(''); setEditingLocation(false);
     saveToBackend({ prefs, bio, website, location: '' });
   };
 
-  // Profile pic upload
+  // ✅ FIXED: /api/users/upload-profile-pic instead of /api/auth/upload-profile-pic
   const handleProfilePicChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -154,11 +156,12 @@ export default function SettingsPage() {
     try {
       const formData = new FormData();
       formData.append('profilePic', file);
-      const res = await fetch(`${API}/auth/upload-profile-pic/${userId}`, {
+      const res = await fetch(`${API}/users/upload-profile-pic/${userId}`, {
         method: 'POST',
         body: formData,
       });
       const data = await res.json();
+      console.log('Upload response:', data);
       if (data.profilePicUrl) {
         setProfilePic(data.profilePicUrl);
         const stored = JSON.parse(localStorage.getItem('user') || '{}');
@@ -174,7 +177,7 @@ export default function SettingsPage() {
   };
 
   const avatarSrc = profilePic
-    ? (profilePic.startsWith('http') ? profilePic : `${API.replace('/api', '')}/${profilePic.replace(/\\/g, '/')}`)
+    ? (profilePic.startsWith('http') ? profilePic : `http://localhost:5000/${profilePic.replace(/\\/g, '/')}`)
     : null;
 
   const inputStyle = {
@@ -202,9 +205,8 @@ export default function SettingsPage() {
       <header style={{ position: 'sticky', top: 0, zIndex: 100, background: 'white', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 16, padding: '0 20px', height: 52 }}>
         <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: '1rem', color: '#0e8888', minWidth: 130 }}>SRM Connect</div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, padding: 6, borderRadius: 8 }}>🔔</button>
+          <button onClick={() => navigate('/notifications')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, padding: 6, borderRadius: 8 }}>🔔</button>
           <button onClick={() => navigate('/messages')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, padding: 6, borderRadius: 8 }}>💬</button>
-          {/* Profile pic in topnav */}
           <div
             onClick={() => navigate('/settings')}
             style={{ width: 32, height: 32, borderRadius: '50%', background: '#0e8888', overflow: 'hidden', cursor: 'pointer', border: '2px solid #0e8888', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -249,24 +251,25 @@ export default function SettingsPage() {
           {/* BANNER + PROFILE HEADER */}
           <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: 20 }}>
             <div style={{ height: 130, background: 'radial-gradient(ellipse at 20% 50%, #1a1a4e 0%, #0d0d2b 40%, #000510 70%), radial-gradient(circle at 80% 20%, #0e2a5e 0%, transparent 50%)', position: 'relative', overflow: 'hidden' }}>
-  {/* Stars */}
-  {[...Array(40)].map((_, i) => (
-    <div key={i} style={{
-      position: 'absolute',
-      width: i % 5 === 0 ? 2.5 : 1.5,
-      height: i % 5 === 0 ? 2.5 : 1.5,
-      borderRadius: '50%',
-      background: 'white',
-      opacity: 0.4 + Math.random() * 0.6,
-      top: `${(i * 37 + 11) % 100}%`,
-      left: `${(i * 61 + 7) % 100}%`,
-    }} />
-  ))}
-</div>
+              {[...Array(40)].map((_, i) => (
+                <div key={i} style={{
+                  position: 'absolute',
+                  width: i % 5 === 0 ? 2.5 : 1.5,
+                  height: i % 5 === 0 ? 2.5 : 1.5,
+                  borderRadius: '50%',
+                  background: 'white',
+                  opacity: 0.4 + (i * 0.013) % 0.6,
+                  top: `${(i * 37 + 11) % 100}%`,
+                  left: `${(i * 61 + 7) % 100}%`,
+                }} />
+              ))}
+            </div>
+
             <div style={{ padding: '0 28px 24px', marginTop: -28 }}>
               <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, marginTop: 0 }}>
-                  {/* Avatar */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+
+                  {/* Avatar upload */}
                   <div style={{ position: 'relative' }}>
                     <div
                       style={{ width: 88, height: 88, borderRadius: '50%', border: '4px solid white', background: '#0e8888', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }}
@@ -278,45 +281,53 @@ export default function SettingsPage() {
                         : <span style={{ color: 'white', fontWeight: 700, fontSize: '2rem', fontFamily: 'Sora, sans-serif' }}>{currentUserName?.[0]?.toUpperCase()}</span>
                       }
                     </div>
-                    <button
-  onClick={() => fileInputRef.current.click()}
-  disabled={uploading}
-  style={{ position: 'absolute', bottom: 4, right: 4, width: 24, height: 24, borderRadius: '50%', background: '#0e8888', border: '2px solid white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}
->
-  {uploading ? '⏳' : '📷'}
-</button>
-<input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleProfilePicChange} />
 
-{/* Remove profile pic button — only shows when pic exists */}
-{avatarSrc && (
-  <button
-    onClick={async () => {
-      setProfilePic('');
-      const stored = JSON.parse(localStorage.getItem('user') || '{}');
-      stored.profilePic = '';
-      localStorage.setItem('user', JSON.stringify(stored));
-      try {
-        await fetch(`${API}/auth/settings/${userId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ profilePic: '' }),
-        });
-      } catch (err) { console.error(err); }
-      showSaved();
-    }}
-    title="Remove photo"
-    style={{
-      position: 'absolute', top: 0, right: -2,
-      width: 22, height: 22, borderRadius: '50%',
-      background: '#dc2626', border: '2px solid white',
-      cursor: 'pointer', display: 'flex',
-      alignItems: 'center', justifyContent: 'center',
-      fontSize: 10, color: 'white', fontWeight: 700,
-    }}
-  >
-    ✕
-  </button>
-)}
+                    <button
+                      onClick={() => fileInputRef.current.click()}
+                      disabled={uploading}
+                      style={{ position: 'absolute', bottom: 4, right: 4, width: 24, height: 24, borderRadius: '50%', background: '#0e8888', border: '2px solid white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}
+                    >
+                      {uploading ? '⏳' : '📷'}
+                    </button>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleProfilePicChange}
+                    />
+
+                    {/* ✅ FIXED: remove pic uses /api/users/settings */}
+                    {avatarSrc && (
+                      <button
+                        onClick={async () => {
+                          setProfilePic('');
+                          const stored = JSON.parse(localStorage.getItem('user') || '{}');
+                          stored.profilePic = '';
+                          localStorage.setItem('user', JSON.stringify(stored));
+                          try {
+                            await fetch(`${API}/users/settings/${userId}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ profilePic: '' }),
+                            });
+                          } catch (err) { console.error(err); }
+                          showSaved();
+                        }}
+                        title="Remove photo"
+                        style={{
+                          position: 'absolute', top: 0, right: -2,
+                          width: 22, height: 22, borderRadius: '50%',
+                          background: '#dc2626', border: '2px solid white',
+                          cursor: 'pointer', display: 'flex',
+                          alignItems: 'center', justifyContent: 'center',
+                          fontSize: 10, color: 'white', fontWeight: 700,
+                        }}
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
 
                   <div style={{ paddingBottom: 10 }}>
@@ -324,6 +335,7 @@ export default function SettingsPage() {
                     <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{currentUserEmail}</p>
                   </div>
                 </div>
+
                 {savedMsg && (
                   <div style={{ paddingBottom: 10, fontSize: 13, color: '#0e8888', fontWeight: 600, background: '#e0f7f8', padding: '6px 14px', borderRadius: 20 }}>
                     {savedMsg}
@@ -459,10 +471,10 @@ export default function SettingsPage() {
 
               <div style={{ padding: '0 24px' }}>
                 {[
-                  { key: 'privateProfile', icon: '🔒', title: 'Private Profile', desc: 'Only approved students can see your full activity.', type: 'toggle' },
-                  { key: 'pushNotifications', icon: '🔔', title: 'Push Notifications', desc: 'Get alerted about event reminders and direct messages.', type: 'toggle' },
-                  { key: 'showOnlineStatus', icon: '👁️', title: 'Show Online Status', desc: 'Show others when you are active on the platform.', type: 'toggle' },
-                  { key: 'feedback', icon: '📝', title: 'Feedback', desc: 'Share your experience or report issues.', type: 'link', linkText: 'Open' },
+                  { key: 'privateProfile',    icon: '🔒', title: 'Private Profile',      desc: 'Only approved students can see your full activity.',           type: 'toggle' },
+                  { key: 'pushNotifications', icon: '🔔', title: 'Push Notifications',   desc: 'Get alerted about event reminders and direct messages.',       type: 'toggle' },
+                  { key: 'showOnlineStatus',  icon: '👁️', title: 'Show Online Status',   desc: 'Show others when you are active on the platform.',             type: 'toggle' },
+                  { key: 'feedback',          icon: '📝', title: 'Feedback',              desc: 'Share your experience or report issues.',                      type: 'link', linkText: 'Open' },
                 ].map(({ key, icon, title, desc, type, linkText }, idx, arr) => (
                   <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 0', borderBottom: idx < arr.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
                     <div style={{ width: 38, height: 38, borderRadius: 10, background: '#f0fdfe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>
@@ -476,15 +488,13 @@ export default function SettingsPage() {
                       <Toggle checked={prefs[key] || false} onChange={val => updatePref(key, val)} />
                     )}
                     {type === 'link' && (
-  <span
-    onClick={() => {
-      if (key === 'feedback') navigate('/feedback');
-    }}
-    style={{ fontSize: 13, fontWeight: 600, color: '#0e8888', cursor: 'pointer' }}
-  >
-    {linkText}
-  </span>
-)}
+                      <span
+                        onClick={() => { if (key === 'feedback') navigate('/feedback'); }}
+                        style={{ fontSize: 13, fontWeight: 600, color: '#0e8888', cursor: 'pointer' }}
+                      >
+                        {linkText}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>

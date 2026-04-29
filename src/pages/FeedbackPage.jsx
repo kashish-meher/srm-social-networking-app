@@ -89,24 +89,36 @@ export default function FeedbackPage() {
   };
 
   const handleSubmit = async () => {
-    const e = validate();
-    if (Object.keys(e).length > 0) { setErrors(e); return; }
+  const e = validate();
+  if (Object.keys(e).length > 0) { setErrors(e); return; }
 
-    setSubmitting(true);
-    // Simulate API call
-    await new Promise(res => setTimeout(res, 1200));
+  setSubmitting(true);
 
-    try {
-      await fetch('http://localhost:5000/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-    } catch (_) { /* Proceed even if API unreachable in dev */ }
+  try {
+    const token = localStorage.getItem('token'); // adjust key if yours differs
+    const res = await fetch('http://localhost:5000/api/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(form),
+    });
 
-    setSubmitting(false);
+    if (!res.ok) {
+      const data = await res.json();
+      setErrors({ feedback: data.message || 'Submission failed. Try again.' });
+      setSubmitting(false);
+      return;
+    }
+
     setSubmitted(true);
-  };
+  } catch (err) {
+    setErrors({ feedback: 'Network error. Please try again.' });
+  }
+
+  setSubmitting(false);
+};
 
   const handleReset = () => {
     setForm({ category: '', title: '', feedback: '', rating: null, anonymous: false });
